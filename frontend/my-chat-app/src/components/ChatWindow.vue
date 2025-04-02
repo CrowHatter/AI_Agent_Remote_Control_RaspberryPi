@@ -6,7 +6,7 @@
             <div v-for="(msg, index) in chatMessages" :key="index"
                 :class="['chat-bubble', msg.sender === 'user' ? 'user-bubble' : 'assistant-bubble']">
                 <template v-if="msg.sender === 'assistant'">
-                    <div v-html="msg.content"></div>
+                    <div v-html="msg.content" v-highlight></div>
                 </template>
                 <template v-else>
                     <div>{{ msg.content }}</div>
@@ -142,7 +142,7 @@ textarea.form-control {
     max-width: 60%;
     margin-left: auto;
     /* 推到右側 */
-    text-align: right;
+    text-align: left;
     /* 內文靠右 */
 }
 
