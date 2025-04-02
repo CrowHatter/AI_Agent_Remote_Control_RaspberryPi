@@ -197,3 +197,5 @@ pnpm-debug.log*
 *.sln
 *.sw?
 backend/config.json
+backend/app.py
+backend/test.md
