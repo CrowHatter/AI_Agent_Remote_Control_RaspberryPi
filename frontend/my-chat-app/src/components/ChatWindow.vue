@@ -1,4 +1,4 @@
-<!-- src/components/ChatWindow.vue -->
+<!-- src/ChatWindow.vue -->
 <template>
     <div class="chat-window-container">
         <!-- 聊天訊息區：位於輸入區上方，不與輸入區重疊 -->
@@ -17,8 +17,7 @@
         <div class="chat-input">
             <div class="input-container">
                 <textarea class="form-control" placeholder="請輸入訊息..." v-model="inputValue" rows="1" @input="autoResize"
-                    ref="autoText">
-        </textarea>
+                    ref="autoText"></textarea>
                 <button class="send-button" @click="handleSend">
                     ➤
                 </button>
@@ -67,7 +66,14 @@ export default {
         autoResize(e) {
             const textarea = e.target;
             textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
+            const maxHeight = window.innerHeight * 0.3; // 30% of viewport height
+            if (textarea.scrollHeight < maxHeight) {
+                textarea.style.height = textarea.scrollHeight + 'px';
+                textarea.style.overflowY = 'hidden';
+            } else {
+                textarea.style.height = maxHeight + 'px';
+                textarea.style.overflowY = 'auto';
+            }
         },
         resetTextareaHeight() {
             const textarea = this.$refs.autoText;
@@ -105,13 +111,14 @@ export default {
     position: relative;
 }
 
-/* textarea：全寬，右側留空間給送信按鈕 */
+/* textarea：全寬，右側留空間給送信按鈕，最大高度限制為 30% viewport */
 textarea.form-control {
     width: 100%;
     box-sizing: border-box;
     resize: none;
     padding-right: 50px;
-    /* 調整此值以確保送信按鈕不重疊文字 */
+    max-height: 30vh;
+    overflow-y: auto;
 }
 
 /* 送信按鈕：絕對定位在右下角 */
@@ -133,7 +140,6 @@ textarea.form-control {
     margin-bottom: 10px;
     white-space: pre-wrap;
     overflow-wrap: break-word;
-    /* 長字自動換行 */
 }
 
 /* 使用者訊息：靠右顯示，寬度限制 60% */
@@ -141,9 +147,7 @@ textarea.form-control {
     background-color: #007bff;
     max-width: 60%;
     margin-left: auto;
-    /* 推到右側 */
     text-align: left;
-    /* 內文靠右 */
 }
 
 /* LLM 回覆：靠左顯示，寬度限制 80% */
