@@ -12,7 +12,7 @@ import 'highlight.js/styles/github-dark.css' // 可根據需要調整樣式
 const renderer = new marked.Renderer();
 
 // 修正重點：若 code 是物件 (含 type, text, lang...)，轉換為字串
-renderer.code = function(maybeCode, maybeLanguage) {
+renderer.code = function (maybeCode, maybeLanguage) {
   let code = maybeCode;
   let lang = maybeLanguage || '';
 
@@ -43,11 +43,11 @@ renderer.code = function(maybeCode, maybeLanguage) {
   // 回傳自訂 HTML 模板
   return (
     '<div class="code-block-container" style="position: relative; margin: 1em 0; background-color: #2d2d2d; border-radius: 5px;">' +
-      '<div class="code-block-header" style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; background-color: #1e1e1e; border-top-left-radius: 5px; border-top-right-radius: 5px;">' +
-        '<span class="code-language" style="font-size: 0.9em; color: #fff;">' + (lang.toUpperCase()) + '</span>' +
-        '<button class="copy-code-button" style="font-size: 0.8em; padding: 2px 5px; background-color: #007bff; color: #fff; border: none; border-radius: 3px; cursor: pointer;" onclick="copyCode(this)">Copy</button>' +
-      '</div>' +
-      '<pre style="margin: 0; overflow-x: auto; padding: 10px;"><code class="hljs ' + lang + '">' + highlighted + '</code></pre>' +
+    '<div class="code-block-header" style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; background-color: #1e1e1e; border-top-left-radius: 5px; border-top-right-radius: 5px;">' +
+    '<span class="code-language" style="font-size: 0.9em; color: #fff;">' + (lang.toUpperCase()) + '</span>' +
+    '<button class="copy-code-button" style="font-size: 0.8em; padding: 2px 5px; background-color: #007bff; color: #fff; border: none; border-radius: 3px; cursor: pointer;" onclick="copyCode(this)">Copy</button>' +
+    '</div>' +
+    '<pre style="margin: 0; overflow-x: auto; padding: 10px;"><code class="hljs ' + lang + '">' + highlighted + '</code></pre>' +
     '</div>'
   );
 };
@@ -64,7 +64,7 @@ marked.setOptions({
 });
 
 // 全域複製函式，供複製按鈕使用
-window.copyCode = function(button) {
+window.copyCode = function (button) {
   // 依照上面模板結構，button 的父層是 header，再往下找 <pre> 區塊
   const pre = button.parentElement.parentElement.nextElementSibling;
   if (pre) {

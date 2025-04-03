@@ -152,7 +152,7 @@ textarea.form-control {
 
 /* LLM 回覆：靠左顯示，寬度限制 80% */
 .assistant-bubble {
-    background-color: #6c757d;
+    background-color: #484c51;
     max-width: 80%;
     align-self: flex-start;
 }
