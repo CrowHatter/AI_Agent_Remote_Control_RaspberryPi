@@ -34,9 +34,10 @@ export default {
   data() {
     return {
       historyWidth: 15, // 左側佔 15%
+      // 為每個聊天室增加 chat_id 屬性
       chatHistories: [
-        { title: '聊天室 1', messages: [] },
-        { title: '聊天室 2', messages: [] }
+        { title: '聊天室 1', chat_id: 'chat1', messages: [] },
+        { title: '聊天室 2', chat_id: 'chat2', messages: [] }
       ],
       currentChatIndex: 0,
       userInput: '',
@@ -49,37 +50,38 @@ export default {
       return this.chatHistories[this.currentChatIndex].messages;
     }
   },
+  mounted() {
+    // 初次載入時，取得預設聊天室的歷史記錄
+    this.loadChatHistory(this.chatHistories[this.currentChatIndex].chat_id, this.currentChatIndex);
+  },
   methods: {
-    // 送出訊息後，呼叫後端 API，並將使用者與 LLM 回覆加入對話記錄
+    // 送出訊息後，呼叫後端 API，並將使用者與 Assistant 的回覆加入對話記錄
     sendMessage() {
       if (!this.userInput.trim()) return;
       const userMsg = this.userInput;
 
-      // 將使用者訊息加入對話記錄
+      // 1. 將使用者訊息加入對話記錄（靠右顯示）
       this.chatHistories[this.currentChatIndex].messages.push({
         sender: 'user',
         content: userMsg
       });
 
-      // 清空輸入框
+      // 2. 清空輸入框
       this.userInput = '';
 
-      // 呼叫後端 API
+      // 3. 呼叫後端 API
+      const chatId = this.chatHistories[this.currentChatIndex].chat_id;
       axios.post("http://localhost:5000/assistant1/chat", {
-        chat_id: "chat1",
+        chat_id: chatId,
         user_message: userMsg
       })
       .then(response => {
-        // 可以先檢查回傳資料
         console.log("API call success:", response.data);
-
-        // 取得後端回傳的 assistant_markdown
+        // 將 Assistant 回覆先以 marked 轉成 HTML
         const assistantMarkdown = response.data.assistant_markdown;
-
-        // 將 Markdown 轉成 HTML
         const parsedReply = marked.parse(assistantMarkdown);
 
-        // 將 Assistant 回覆加入對話記錄
+        // 4. 將 Assistant 的回覆加入對話記錄（靠左顯示）
         this.chatHistories[this.currentChatIndex].messages.push({
           sender: 'assistant',
           content: parsedReply
@@ -87,13 +89,44 @@ export default {
       })
       .catch(error => {
         console.error("API call error:", error);
-        // 若 API 發生錯誤，加入錯誤訊息
         this.chatHistories[this.currentChatIndex].messages.push({
           sender: 'assistant',
           content: marked.parse("**Error:** 無法取得回覆，請稍後再試。")
         });
       });
     },
+
+    // 根據 chat_id 載入聊天室歷史記錄
+    loadChatHistory(chat_id, index) {
+      axios.get(`http://localhost:5000/assistant1/history/${chat_id}`)
+      .then(response => {
+        // 從後端取得的 history，過濾掉 system 並做前端格式轉換
+        const rawHistory = response.data.history || [];
+        const filteredMessages = rawHistory
+          .filter(msg => msg.role !== 'system')
+          .map(msg => {
+            if (msg.role === 'assistant') {
+              return {
+                sender: 'assistant',
+                content: marked.parse(msg.content)
+              }
+            } else {
+              // 預設當作 user
+              return {
+                sender: 'user',
+                content: msg.content
+              }
+            }
+          });
+
+        // Vue 3 直接賦值即可
+        this.chatHistories[index].messages = filteredMessages;
+      })
+      .catch(error => {
+        console.error("Failed to load chat history:", error);
+      });
+    },
+
     startDrag() {
       this.isDragging = true;
       document.addEventListener('mousemove', this.onDrag);
@@ -112,9 +145,12 @@ export default {
       document.removeEventListener('mousemove', this.onDrag);
       document.removeEventListener('mouseup', this.stopDrag);
     },
-    // 切換聊天室
+
+    // 切換聊天室：更新 currentChatIndex 並載入該聊天室歷史記錄
     switchChat(index) {
       this.currentChatIndex = index;
+      const chat_id = this.chatHistories[index].chat_id;
+      this.loadChatHistory(chat_id, index);
     }
   }
 }

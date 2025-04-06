@@ -5,14 +5,19 @@
         <div class="chat-messages" ref="chatMessages">
             <div v-for="(msg, index) in chatMessages" :key="index"
                 :class="['chat-bubble', msg.sender === 'user' ? 'user-bubble' : 'assistant-bubble']">
+                
+                <!-- Assistant訊息：v-html 直接顯示已經解析的HTML；移除 v-highlight -->
                 <template v-if="msg.sender === 'assistant'">
-                    <div v-html="msg.content" v-highlight></div>
+                    <div v-html="msg.content"></div>
                 </template>
+                
+                <!-- User訊息：直接顯示字串 -->
                 <template v-else>
                     <div>{{ msg.content }}</div>
                 </template>
             </div>
         </div>
+
         <!-- 輸入區：位於下方，包含 textarea 與送信圖示按鈕 -->
         <div class="chat-input">
             <div class="input-container">
@@ -91,7 +96,7 @@ export default {
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 0 6% 2% 2%;
+    padding: 2% 6% 2% 2%;
 }
 
 /* 聊天訊息區：填滿上方剩餘空間，可捲動 */
