@@ -148,3 +148,4 @@ python app.py
 - Postman 或自製前端進行測試
 
 ---
+[⬇️ 下載報告（PDF）](./slide.pdf)
