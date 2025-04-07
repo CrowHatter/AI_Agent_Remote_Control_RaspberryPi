@@ -123,10 +123,6 @@
     position: relative;
   }
   
-  .chat-input {
-    /* 輸入區樣式，可根據需要調整 */
-  }
-  
   .input-container {
     position: relative;
   }

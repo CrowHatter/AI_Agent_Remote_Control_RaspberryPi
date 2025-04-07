@@ -108,7 +108,7 @@ def assistant1_chat():
     
     try:
         response = client_openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=chat_doc["messages"],
             temperature=0.7
         )
