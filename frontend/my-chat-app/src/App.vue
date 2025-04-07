@@ -1,4 +1,3 @@
-<!-- src/App.vue -->
 <template>
   <div class="container-fluid p-0">
     <div class="d-flex" style="height: 100vh;">
@@ -11,12 +10,14 @@
       </div>
       <!-- 分隔線：可拖曳 -->
       <div class="divider" @mousedown="startDrag"></div>
-      <!-- 右側：聊天視窗 -->
-      <div :style="{ width: (100 - historyWidth) + '%' }" class="chat-window d-flex flex-column">
+      <!-- 右側：聊天視窗，僅包含 ChatWindow 組件，由該組件自行生成完整結構 -->
+      <div :style="{ width: (100 - historyWidth) + '%' }" class="chat-window">
         <ChatWindow
-          :chatMessages="currentChatMessages"
           v-model="userInput"
-          @send-message="sendMessage" />
+          :chatMessages="currentChatMessages"
+          @send-message="sendMessage"
+          @execute-message="executeMessage"
+        />
       </div>
     </div>
   </div>
@@ -33,8 +34,7 @@ export default {
   components: { ChatHistory, ChatWindow },
   data() {
     return {
-      historyWidth: 15, // 左側佔 15%
-      // 為每個聊天室增加 chat_id 屬性
+      historyWidth: 15,
       chatHistories: [
         { title: '聊天室 1', chat_id: 'chat1', messages: [] },
         { title: '聊天室 2', chat_id: 'chat2', messages: [] }
@@ -45,88 +45,103 @@ export default {
     }
   },
   computed: {
-    // 傳入目前選擇聊天室的訊息記錄
     currentChatMessages() {
       return this.chatHistories[this.currentChatIndex].messages;
+    },
+    currentChatId() {
+      return this.chatHistories[this.currentChatIndex].chat_id;
     }
   },
   mounted() {
-    // 初次載入時，取得預設聊天室的歷史記錄
     this.loadChatHistory(this.chatHistories[this.currentChatIndex].chat_id, this.currentChatIndex);
   },
   methods: {
-    // 送出訊息後，呼叫後端 API，並將使用者與 Assistant 的回覆加入對話記錄
     sendMessage() {
       if (!this.userInput.trim()) return;
       const userMsg = this.userInput;
-
-      // 1. 將使用者訊息加入對話記錄（靠右顯示）
+      // 將使用者訊息加入對話記錄
       this.chatHistories[this.currentChatIndex].messages.push({
         sender: 'user',
         content: userMsg
       });
-
-      // 2. 清空輸入框
+      const chatId = this.currentChatId;
       this.userInput = '';
-
-      // 3. 呼叫後端 API
-      const chatId = this.chatHistories[this.currentChatIndex].chat_id;
       axios.post("http://localhost:5000/assistant1/chat", {
         chat_id: chatId,
         user_message: userMsg
       })
       .then(response => {
-        console.log("API call success:", response.data);
-        // 將 Assistant 回覆先以 marked 轉成 HTML
+        console.log("Assistant1 API success:", response.data);
         const assistantMarkdown = response.data.assistant_markdown;
-        const parsedReply = marked.parse(assistantMarkdown);
-
-        // 4. 將 Assistant 的回覆加入對話記錄（靠左顯示）
+        // 將 Assistant 回覆轉成 HTML 後顯示，同時保留原始 markdown
         this.chatHistories[this.currentChatIndex].messages.push({
           sender: 'assistant',
-          content: parsedReply
+          content: marked.parse(assistantMarkdown),
+          originalMarkdown: assistantMarkdown,
+          executing: false
         });
       })
       .catch(error => {
-        console.error("API call error:", error);
+        console.error("Assistant1 API error:", error);
         this.chatHistories[this.currentChatIndex].messages.push({
           sender: 'assistant',
           content: marked.parse("**Error:** 無法取得回覆，請稍後再試。")
         });
       });
     },
-
-    // 根據 chat_id 載入聊天室歷史記錄
     loadChatHistory(chat_id, index) {
       axios.get(`http://localhost:5000/assistant1/history/${chat_id}`)
       .then(response => {
-        // 從後端取得的 history，過濾掉 system 並做前端格式轉換
         const rawHistory = response.data.history || [];
+        // 過濾 system 訊息，並根據 role 轉換格式
         const filteredMessages = rawHistory
           .filter(msg => msg.role !== 'system')
           .map(msg => {
             if (msg.role === 'assistant') {
               return {
                 sender: 'assistant',
-                content: marked.parse(msg.content)
+                content: marked.parse(msg.content),
+                originalMarkdown: msg.content,
+                executing: false
               }
             } else {
-              // 預設當作 user
               return {
                 sender: 'user',
                 content: msg.content
               }
             }
           });
-
-        // Vue 3 直接賦值即可
         this.chatHistories[index].messages = filteredMessages;
       })
       .catch(error => {
         console.error("Failed to load chat history:", error);
       });
     },
-
+    executeMessage(messageIndex) {
+      const message = this.currentChatMessages[messageIndex];
+      if (!(message.sender === 'assistant' && message.originalMarkdown && message.originalMarkdown.includes('```'))) return;
+      // 直接設定屬性，不用 Vue2 的 this.$set
+      message.executing = true;
+      const chatId = this.currentChatId;
+      const formData = new FormData();
+      formData.append("chat_id", chatId);
+      formData.append("device_id", "Device1");
+      // 傳送原始 markdown 給後端
+      formData.append("markdown_content", message.originalMarkdown);
+      
+      axios.post("http://127.0.0.1:5000/assistant2/execute", formData)
+      .then(response => {
+        console.log("Assistant2 execute response:", response.data);
+        // 不直接覆蓋 messages，而是重新刷新聊天室歷史以確保訊息格式正確
+        this.loadChatHistory(chatId, this.currentChatIndex);
+      })
+      .catch(error => {
+        console.error("Assistant2 execute error:", error);
+      })
+      .finally(() => {
+        message.executing = false;
+      });
+    },
     startDrag() {
       this.isDragging = true;
       document.addEventListener('mousemove', this.onDrag);
@@ -145,8 +160,6 @@ export default {
       document.removeEventListener('mousemove', this.onDrag);
       document.removeEventListener('mouseup', this.stopDrag);
     },
-
-    // 切換聊天室：更新 currentChatIndex 並載入該聊天室歷史記錄
     switchChat(index) {
       this.currentChatIndex = index;
       const chat_id = this.chatHistories[index].chat_id;
@@ -156,20 +169,13 @@ export default {
 }
 </script>
 
-<style scoped>
-/* 深色模式背景 */
-.chat-history,
-.chat-window {
+<style>
+.chat-history {
   background-color: #343a40;
   color: #fff;
-}
-
-/* 左側聊天室邊框 */
-.chat-history {
   border-right: 1px solid #555;
 }
 
-/* 分隔線 */
 .divider {
   width: 5px;
   background-color: #555;

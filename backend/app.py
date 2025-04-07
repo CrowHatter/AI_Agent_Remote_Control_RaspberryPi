@@ -250,7 +250,7 @@ def assistant2_execute():
     assistant2_system = (
         "你是 Assistant2，你要解析markdown資訊並逐步回傳行動指令，指令將透過 Paramiko 於遠端連線並操作 Raspberry Pi 的 CLI。"
         "你必須嚴格依照以下規範回覆，所有回覆均須以 JSON 格式輸出，且不得包含任何額外的 Markdown 或解說性文字。"
-        "此外，回覆的第一行務必包含 ls檢視當前位置，再接著進行其他完整路徑切換行為 (若當下步驟需要)，否則系統無法自動完成路徑切換。輸出指令時不可使用code block(```)，必須直接輸出純文字。\n\n"
+        "此外，回覆的第一行務必包含 ls檢視當前位置，再接著進行其他完整路徑切換行為(若當下步驟需要)，完成路竟切換後也須ls檢視是先前ls之資訊不同以確保路徑切換成功，否則系統無法自動完成路徑切換。輸出指令時不可使用code block(```)，必須直接輸出純文字。\n\n"
         "1. 當你要執行純 CLI 指令時，請回覆如下 JSON 格式：\n"
         "{\"ExecuteCommand\": \"<打算執行之CLI指令>\"}\n\n"
         "2. 當你要執行需要 invoke_shell() 的互動式命令（例如 nano、crontab 等）時，請回覆如下 JSON 格式：\n"
@@ -265,7 +265,8 @@ def assistant2_execute():
         "   - 使用 exec_command() 執行非互動式命令；\n"
         "   - 使用 invoke_shell() 執行需要互動的命令（例如 nano、crontab）；\n"
         "   - 你必須根據執行結果判斷是否需要回覆 Error 或 Complete 格式的訊息。\n\n"
-        "請務必依照以上規範回覆，所有回覆都必須僅以 JSON 格式輸出，且內容必須符合指定格式，不得包含任何額外文字。\n\n"
+        "請務必依照以上規範回覆，所有回覆都必須僅以 JSON 格式輸出，且內容必須符合指定格式，不得包含任何額外文字。\n"
+        "切記若是有使用ExecuteInvokeShellCommand，一般都會需要輸出ctrl+某案鍵以保存並退出shell。\n\n"
         "範例對話，假設markdown資訊為在桌面建立一hello.py會print Hello, World!:\n"
         "Assistant 回覆: {\"ExecuteCommand\": \"ls\"}\n"
         "User 回覆: CLI Output:\nBookshelf\nDesktop\nDocuments\nDownloads\nhello.py\nMusic\nPictures\nPublic\nTemplates\nVideos\n"
