@@ -1,7 +1,6 @@
 # My Chat App
 
-
-
+此專案為 Raspberry Pi AI Agent 的前端程式碼，採用 Vue3 框架開發。
 
 ## 前置需求
 
