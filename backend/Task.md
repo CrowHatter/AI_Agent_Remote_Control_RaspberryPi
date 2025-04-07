@@ -10,7 +10,9 @@
      ```json
      {
        "OPENAI_API_KEY": "your_openai_api_key_here",
-       "OTHER_PRIVATE_KEY": "any_other_key_here"
+       "DeviceIP": {
+        "Device1": "192.168.1.104"
+      }
      }
      ```
   3. 請確保將 `config.json` 加入 `.gitignore`，避免上傳至版本控制系統或公開儲存庫。

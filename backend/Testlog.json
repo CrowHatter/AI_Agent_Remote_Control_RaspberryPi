@@ -1,0 +1,74 @@
+[
+  {
+    "role": "system",
+    "content": "你是 Assistant2，你要解析markdown資訊並逐步回傳行動指令，指令將透過 Paramiko 於遠端連線並操作 Raspberry Pi 的 CLI。你必須嚴格依照以下規範回覆，所有回覆均須以 JSON 格式輸出，且不得包含任何額外的 Markdown 或解說性文字。此外，回覆的第一行務必包含 ls檢視當前位置，再接著進行其他完整路徑切換行為 (若當下步驟需要)，否則系統無法自動完成路徑切換。輸出指令時不可使用code block(```)，必須直接輸出純文字。\n\n1. 當你要執行純 CLI 指令時，請回覆如下 JSON 格式：\n{\"ExecuteCommand\": \"<打算執行之CLI指令>\"}\n\n2. 當你要執行需要 invoke_shell() 的互動式命令（例如 nano、crontab 等）時，請回覆如下 JSON 格式：\n{\"ExecuteInvokeShellCommand\": \"<打算執行之指令>\"}\n\n3. 當你判斷命令執行發生錯誤時，請立刻回覆以下 JSON 格式（之後不再輸出任何 CLI 指令）：\n{\"Error\": {\"ExecutedCommand\": \"<剛才執行的指令>\", \"RaspberryPiOutput\": \"<實際輸出結果>\", \"ExpectedBehavior\": \"<本應該看到或期望出現的結果描述>\"}}\n\n4. 當所有任務順利完成時，請回覆以下 JSON 格式（之後不再輸出任何 CLI 指令）：\n{\"Complete\": \"All commands executed successfully.\"}\n\n5. 每次你僅能回覆一條指令。回覆的第一行必須包含檢查當前位置（例如 ls），並在需要時進行目錄切換或其他必要操作，以保證後續指令能夠正確執行。\n\n6. 若 Markdown 中包含多個 Code Block，你應依序拆分並逐步執行，每次回覆僅提供一條指令，且不得混合多個指令。\n\n7. Paramiko 功能說明：\n   - 使用 exec_command() 執行非互動式命令；\n   - 使用 invoke_shell() 執行需要互動的命令（例如 nano、crontab）；\n   - 你必須根據執行結果判斷是否需要回覆 Error 或 Complete 格式的訊息。\n\n請務必依照以上規範回覆，所有回覆都必須僅以 JSON 格式輸出，且內容必須符合指定格式，不得包含任何額外文字。\n\n範例對話，假設markdown資訊為在桌面建立一hello.py會print Hello, World!:\nAssistant 回覆: {\"ExecuteCommand\": \"ls\"}\nUser 回覆: CLI Output:\nBookshelf\nDesktop\nDocuments\nDownloads\nhello.py\nMusic\nPictures\nPublic\nTemplates\nVideos\nAssistant 回覆: {\"ExecuteCommand\": \"cd Desktop\"}\nUser 回覆: CLI Output:\nAssistant 回覆: {\"ExecuteCommand\": \"echo 'print(\"Hello, World!\")' > hello.py\"}\nUser 回覆: CLI Output:\nAssistant 回覆: {\"Complete\": \"All commands executed successfully.\"}"
+  },
+  {
+    "role": "user",
+    "content": "\n### 在桌面建立 Python 檔案\n\n首先，我們需要在桌面建立一個 Python 檔案，並在檔案中寫入程式碼來印出 \"Hello, World!\"。\n\n1. 首先，切換至桌面目錄：\n```bash\ncd ~/Desktop\n```\n\n2. 接著，使用以下指令建立一個新的 Python 檔案（例如 `hello.py`）：\n```bash\necho \"print('Hello, World!')\" > hello.py\n```\n\n### 編輯 Python 檔案\n\n現在我們已經在桌面建立了一個 Python 檔案 `hello.py`，接下來我們可以編輯這個檔案，讓它真正印出 \"Hello, World!\"。\n\n1. 使用以下指令編輯 `hello.py` 檔案：\n```bash\nnano hello.py\n```\n\n2. 在 Nano 編輯器中，將游標移至 `print('Hello, World!')` 這一行，修改程式碼或做任何其他必要的編輯。\n\n3. 按下 `Ctrl + X`，再依序按下 `Y` 確認儲存，最後按下 `Enter` 離開 Nano 編輯器。\n\n### 執行 Python 檔案\n\n最後，我們可以執行剛剛建立的 Python 檔案 `hello.py`，來印出 \"Hello, World!\"。\n\n1. 使用以下指令執行 `hello.py` 檔案：\n```bash\npython3 hello.py\n```\n\n透過以上步驟，您已在桌面建立了一個能印出 \"Hello, World!\" 的 Python 檔案並成功執行。如果有任何問題或需要進一步協助，請隨時讓我知道！\n"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"ExecuteCommand\": \"ls\"}"
+  },
+  {
+    "role": "user",
+    "content": "CLI Output:\nBookshelf\nDesktop\nDocuments\nDownloads\nhello.py\nMusic\nPictures\nPublic\nTemplates\nVideos"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"ExecuteCommand\": \"cd Desktop\"}"
+  },
+  {
+    "role": "user",
+    "content": "CLI Output:\n"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"ExecuteCommand\": \"echo \\\"print('Hello, World!')\\\" > hello.py\"}"
+  },
+  {
+    "role": "user",
+    "content": "CLI Output:\n"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"ExecuteInvokeShellCommand\": \"nano hello.py\"}"
+  },
+  {
+    "role": "user",
+    "content": "CLI Output:\nLast login: Mon Apr  7 22:12:16 2025 from 192.168.1.132\r\r\nnano hello.py\r\n\u001b[?2004hericweng@AIAgentForRasberryPi:~$ nano hello.py\r\n\u001b[?2004l\r\u001b[?2004h\u001b(B\u001b)0\u001b[1;24r\u001b[m\u000f\u001b[?7h\u001b[?1h\u001b=\u001b[?1h\u001b=\u001b[H\u001b[J\u001b[22;34H\u001b[0;7m\u000f[ Reading... ]\u001b[m\u000f\u001b[22;33H\u001b[0;7m\u000f[ Read 1 line ]\u001b[m\u000f\u001b[H\u001b[0;7m\u000f  GNU nano 7.2                        hello.py                                  \u001b[1;79H\u001b[m\u000f\r\u001b[22B\u001b[0;7m\u000f^G\u001b[m\u000f Help\u001b[6C\u001b[0;7m\u000f^O\u001b[m\u000f Write Out \u001b[0;7m\u000f^W\u001b[m\u000f Where Is  \u001b[0;7m\u000f^K\u001b[m\u000f Cut\u001b[7C\u001b[0;7m\u000f^T\u001b[m\u000f Execute   \u001b[0;7m\u000f^C\u001b[m\u000f Location\r\u001b[1B\u001b[0;7m\u000f^X\u001b[m\u000f Exit\u001b[6C\u001b[0;7m\u000f^R\u001b[m\u000f Read File \u001b[0;7m\u000f^\\\u001b[m\u000f Replace   \u001b[0;7m\u000f^U\u001b[m\u000f Paste     \u001b[0;7m\u000f^J\u001b[m\u000f Justify   \u001b[0;7m\u000f^/\u001b[m\u000f Go To Line\r\u001b[22Aprint(\u001b[0;1m\u000f'Hello, World!'\u001b[m\u000f)\r"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"ExecuteCommand\": \"ls\"}"
+  },
+  {
+    "role": "user",
+    "content": "CLI Output:\nBookshelf\nDesktop\nDocuments\nDownloads\nhello.py\nMusic\nPictures\nPublic\nTemplates\nVideos"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"ExecuteCommand\": \"cd Desktop\"}"
+  },
+  {
+    "role": "user",
+    "content": "CLI Output:\n"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"ExecuteCommand\": \"python3 hello.py\"}"
+  },
+  {
+    "role": "user",
+    "content": "CLI Output:\nHello, World!"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"Complete\": \"All commands executed successfully.\"}"
+  },
+  {
+    "role": "user",
+    "content": "{\"Complete\": \"All commands executed successfully.\"}"
+  }
+]
