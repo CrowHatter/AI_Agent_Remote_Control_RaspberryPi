@@ -355,8 +355,8 @@ def assistant2_execute():
                 except Exception as e:
                     ssh_client.close()
                     return jsonify({"error": f"執行 CLI 指令失敗: {str(e)}"}), 500
+                messages.append({"role": "user", "content": f"CLI Output:\n{combined_output}"})
                 print(f"[CMD OUTPUT]\n{combined_output}")
-                # 不記錄中間對話，只保留最終結果
             elif "ExecuteInvokeShellCommand" in parsed:
                 command = parsed["ExecuteInvokeShellCommand"]
                 print(f"[INFO] 執行互動式指令 (invoke_shell): {command}")
@@ -372,8 +372,8 @@ def assistant2_execute():
                 except Exception as e:
                     ssh_client.close()
                     return jsonify({"error": f"執行互動式 CLI 指令失敗: {str(e)}"}), 500
+                messages.append({"role": "user", "content": f"CLI Output:\n{output}"})
                 print(f"[CMD OUTPUT]\n{output}")
-                # 不記錄中間對話
         else:
             ssh_client.close()
             return jsonify({"error": "Assistant2 回覆非 JSON 格式"}), 500
@@ -394,7 +394,7 @@ def assistant2_execute():
     # 將更新後的聊天室記錄餵給 Assistant1 以產生新的 Markdown 回覆
     try:
         new_response = client_openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=chat_doc["messages"],
             temperature=0.7
         )
